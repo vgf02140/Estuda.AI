@@ -8184,3 +8184,533 @@ document.addEventListener(
 >
     Administração
 </button>
+
+    <!--
+    =================================
+        PARTE 8 - CURSOS E AULAS
+    =================================
+    -->
+
+    <section id="pagina-cursos"
+        class="pagina">
+
+           <div class="pagina-cabecalho">
+
+               <div>
+
+                   <span class="etiqueta">
+                       APRENDIZADO
+                   </span>    
+
+                   <h1>Meus cursos</h1>
+               
+               <p>
+                   Escolha um curso e continua seus estudos.
+                   <p/>
+
+               </div>
+
+           </div>
+
+        <div
+            id="listaCursos"
+            class="grid-cards"
+            style="margin-top:25px;"
+        >
+
+            <div class="carregando">
+                Carregando cursos...
+            </div>
+        </div>
+    </section>
+
+    <section id="pagina-curso" class="pagina">
+        
+        <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="abrirPagina('cursos')"
+        >
+
+            rules_version = '2';
+
+service cloud.firestore {
+
+    match /databases/{database}/documents {
+
+
+        /* ========================================
+           FUNÇÃO: USUÁRIO LOGADO
+        ======================================== */
+
+        function logado() {
+
+            return request.auth != null;
+
+        }
+
+
+        /* ========================================
+           FUNÇÃO: ADMINISTRADOR
+        ======================================== */
+
+        function isAdmin() {
+
+            return logado()
+                && exists(
+                    /databases/$(database)
+                    /documents/usuarios/$(request.auth.uid)
+                )
+                && get(
+                    /databases/$(database)
+                    /documents/usuarios/$(request.auth.uid)
+                ).data.admin == true;
+
+        }
+
+
+        /* ========================================
+           USUÁRIOS
+        ======================================== */
+
+        match /usuarios/{userId} {
+
+
+            /* O próprio usuário pode visualizar
+               seu perfil */
+
+            allow read:
+                if logado()
+                && request.auth.uid == userId;
+
+
+            /*
+             * Criação do próprio perfil.
+             *
+             * O usuário NÃO pode se criar
+             * como administrador.
+             */
+
+            allow create:
+                if logado()
+                && request.auth.uid == userId
+                && request.resource.data.admin == false
+                && request.resource.data.role == "aluno";
+
+
+            /*
+             * Atualização do próprio perfil.
+             *
+             * Os campos administrativos não
+             * podem ser alterados pelo aluno.
+             */
+
+            allow update:
+                if logado()
+                && request.auth.uid == userId
+                && request.resource.data.admin
+                    == resource.data.admin
+                && request.resource.data.role
+                    == resource.data.role;
+
+
+            /*
+             * Administrador pode gerenciar
+             * usuários.
+             */
+
+            allow update:
+                if isAdmin();
+
+
+            /* ====================================
+               PROGRESSO
+            ==================================== */
+
+            match /progresso/{progressoId} {
+
+                allow read, write:
+                    if logado()
+                    && request.auth.uid == userId;
+
+            }
+
+
+            /* ====================================
+               CRONOGRAMA
+            ==================================== */
+
+            match /cronograma/{itemId} {
+
+                allow read, write:
+                    if logado()
+                    && request.auth.uid == userId;
+
+            }
+
+
+            /* ====================================
+               CERTIFICADOS
+            ==================================== */
+
+            match /certificados/{certificadoId} {
+
+                allow read:
+                    if logado()
+                    && request.auth.uid == userId;
+
+                allow write:
+                    if logado()
+                    && request.auth.uid == userId;
+
+            }
+
+        }
+
+
+
+        /* ========================================
+           CURSOS
+        ======================================== */
+
+        match /cursos/{cursoId} {
+
+
+            /* Alunos podem visualizar cursos */
+
+            allow read:
+                if logado();
+
+
+            /* Somente administrador modifica */
+
+            allow create, update, delete:
+                if isAdmin();
+
+
+            /* ====================================
+               AULAS
+            ==================================== */
+
+            match /aulas/{aulaId} {
+
+                allow read:
+                    if logado();
+
+                allow create, update, delete:
+                    if isAdmin();
+
+            }
+
+        }
+
+
+
+        /* ========================================
+           SIMULADOS
+        ======================================== */
+
+        match /simulados/{simuladoId} {
+
+
+            allow read:
+                if logado();
+
+
+            allow create, update, delete:
+                if isAdmin();
+
+
+            /* ====================================
+               QUESTÕES
+            ==================================== */
+
+            match /questoes/{questaoId} {
+
+                allow read:
+                    if logado();
+
+                allow create, update, delete:
+                    if isAdmin();
+
+            }
+
+        }
+
+
+
+        /* ========================================
+           COLEÇÃO DE PROGRESSO GLOBAL
+        ======================================== */
+
+        match /progresso/{progressoId} {
+
+            allow read:
+                if logado()
+                && resource.data.usuarioId
+                    == request.auth.uid;
+
+
+            allow create:
+                if logado()
+                && request.resource.data.usuarioId
+                    == request.auth.uid;
+
+
+            allow update:
+                if logado()
+                && resource.data.usuarioId
+                    == request.auth.uid
+                && request.resource.data.usuarioId
+                    == resource.data.usuarioId;
+
+
+            allow delete:
+                if logado()
+                && resource.data.usuarioId
+                    == request.auth.uid;
+
+        }
+
+    }
+        </button>
+               </p></h1rules_version = '2';
+
+service cloud.firestore {
+
+    match /databases/{database}/documents {
+
+
+        /* ========================================
+           FUNÇÃO: USUÁRIO LOGADO
+        ======================================== */
+
+        function logado() {
+
+            return request.auth != null;
+
+        }
+
+
+        /* ========================================
+           FUNÇÃO: ADMINISTRADOR
+        ======================================== */
+
+        function isAdmin() {
+
+            return logado()
+                && exists(
+                    /databases/$(database)
+                    /documents/usuarios/$(request.auth.uid)
+                )
+                && get(
+                    /databases/$(database)
+                    /documents/usuarios/$(request.auth.uid)
+                ).data.admin == true;
+
+        }
+
+
+        /* ========================================
+           USUÁRIOS
+        ======================================== */
+
+        match /usuarios/{userId} {
+
+
+            /* O próprio usuário pode visualizar
+               seu perfil */
+
+            allow read:
+                if logado()
+                && request.auth.uid == userId;
+
+
+            /*
+             * Criação do próprio perfil.
+             *
+             * O usuário NÃO pode se criar
+             * como administrador.
+             */
+
+            allow create:
+                if logado()
+                && request.auth.uid == userId
+                && request.resource.data.admin == false
+                && request.resource.data.role == "aluno";
+
+
+            /*
+             * Atualização do próprio perfil.
+             *
+             * Os campos administrativos não
+             * podem ser alterados pelo aluno.
+             */
+
+            allow update:
+                if logado()
+                && request.auth.uid == userId
+                && request.resource.data.admin
+                    == resource.data.admin
+                && request.resource.data.role
+                    == resource.data.role;
+
+
+            /*
+             * Administrador pode gerenciar
+             * usuários.
+             */
+
+            allow update:
+                if isAdmin();
+
+
+            /* ====================================
+               PROGRESSO
+            ==================================== */
+
+            match /progresso/{progressoId} {
+
+                allow read, write:
+                    if logado()
+                    && request.auth.uid == userId;
+
+            }
+
+
+            /* ====================================
+               CRONOGRAMA
+            ==================================== */
+
+            match /cronograma/{itemId} {
+
+                allow read, write:
+                    if logado()
+                    && request.auth.uid == userId;
+
+            }
+
+
+            /* ====================================
+               CERTIFICADOS
+            ==================================== */
+
+            match /certificados/{certificadoId} {
+
+                allow read:
+                    if logado()
+                    && request.auth.uid == userId;
+
+                allow write:
+                    if logado()
+                    && request.auth.uid == userId;
+
+            }
+
+        }
+
+
+
+        /* ========================================
+           CURSOS
+        ======================================== */
+
+        match /cursos/{cursoId} {
+
+
+            /* Alunos podem visualizar cursos */
+
+            allow read:
+                if logado();
+
+
+            /* Somente administrador modifica */
+
+            allow create, update, delete:
+                if isAdmin();
+
+
+            /* ====================================
+               AULAS
+            ==================================== */
+
+            match /aulas/{aulaId} {
+
+                allow read:
+                    if logado();
+
+                allow create, update, delete:
+                    if isAdmin();
+
+            }
+
+        }
+
+
+
+        /* ========================================
+           SIMULADOS
+        ======================================== */
+
+        match /simulados/{simuladoId} {
+
+
+            allow read:
+                if logado();
+
+
+            allow create, update, delete:
+                if isAdmin();
+
+
+            /* ====================================
+               QUESTÕES
+            ==================================== */
+
+            match /questoes/{questaoId} {
+
+                allow read:
+                    if logado();
+
+                allow create, update, delete:
+                    if isAdmin();
+
+            }
+
+        }
+
+
+
+        /* ========================================
+           COLEÇÃO DE PROGRESSO GLOBAL
+        ======================================== */
+
+        match /progresso/{progressoId} {
+
+            allow read:
+                if logado()
+                && resource.data.usuarioId
+                    == request.auth.uid;
+
+
+            allow create:
+                if logado()
+                && request.resource.data.usuarioId
+                    == request.auth.uid;
+
+
+            allow update:
+                if logado()
+                && resource.data.usuarioId
+                    == request.auth.uid
+                && request.resource.data.usuarioId
+                    == resource.data.usuarioId;
+
+
+            allow delete:
+                if logado()
+                && resource.data.usuarioId
+                    == request.auth.uid;
+
+        
+               </div>
