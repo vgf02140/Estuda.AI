@@ -1989,6 +1989,584 @@ select {
 </div>
 
 
+    <!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+
+    <script>
+
+/* ========================================
+   CONFIGURAÇÃO FIREBASE
+======================================== */
+
+const firebaseConfig = {
+
+    apiKey:
+        "COLOQUE_SUA_API_KEY_AQUI",
+
+    authDomain:
+        "SEU-PROJETO.firebaseapp.com",
+
+    projectId:
+        "SEU-PROJETO",
+
+    storageBucket:
+        "SEU-PROJETO.firebasestorage.app",
+
+    messagingSenderId:
+        "SEU_SENDER_ID",
+
+    appId:
+        "SEU_APP_ID"
+
+};
+
+
+/* ========================================
+   INICIALIZAÇÃO
+======================================== */
+
+if (
+    !firebase.apps.length
+) {
+
+    firebase.initializeApp(
+        firebaseConfig
+    );
+
+}
+
+
+const auth =
+    firebase.auth();
+
+
+const db =
+    firebase.firestore();
+
+
+/* ========================================
+   VARIÁVEIS GLOBAIS
+======================================== */
+
+let usuarioAtual =
+    null;
+
+
+let cursos =
+    [];
+
+
+let aulas =
+    [];
+
+
+let simulados =
+    [];
+
+
+let progresso =
+    {};
+
+
+let cursoAtual =
+    null;
+
+
+let desempenho = {
+
+    respondidas:
+        0,
+
+    acertadas:
+        0
+
+};
+
+
+/* ========================================
+   OBSERVADOR DE LOGIN
+======================================== */
+
+auth.onAuthStateChanged(
+    async function(usuario) {
+
+        usuarioAtual =
+            usuario;
+
+
+        if (usuario) {
+
+            console.log(
+                "Usuário conectado:",
+                usuario.email
+            );
+
+
+            await criarOuAtualizarUsuario(
+                usuario
+            );
+
+
+            await carregarDadosUsuario();
+
+
+            mostrarAplicacao();
+
+
+        } else {
+
+            console.log(
+                "Nenhum usuário conectado."
+            );
+
+
+            mostrarLogin();
+
+        }
+
+    }
+);
+
+
+
+/* ========================================
+   CRIAR PERFIL DO USUÁRIO
+======================================== */
+
+async function criarOuAtualizarUsuario(
+    usuario
+) {
+
+    if (!usuario) {
+        return;
+    }
+
+
+    const referencia =
+        db
+            .collection("usuarios")
+            .doc(
+                usuario.uid
+            );
+
+
+    try {
+
+        const documento =
+            await referencia.get();
+
+
+        if (!documento.exists) {
+
+            await referencia.set({
+
+                uid:
+                    usuario.uid,
+
+                nome:
+                    usuario.displayName ||
+                    "Aluno",
+
+                email:
+                    usuario.email ||
+                    "",
+
+                foto:
+                    usuario.photoURL ||
+                    "",
+
+                admin:
+                    false,
+
+                role:
+                    "aluno",
+
+                criadoEm:
+                    firebase.firestore
+                        .FieldValue
+                        .serverTimestamp(),
+
+                atualizadoEm:
+                    firebase.firestore
+                        .FieldValue
+                        .serverTimestamp()
+
+            });
+
+        } else {
+
+            await referencia.set({
+
+                nome:
+                    usuario.displayName ||
+                    documento.data().nome ||
+                    "Aluno",
+
+                email:
+                    usuario.email ||
+                    documento.data().email ||
+                    "",
+
+                foto:
+                    usuario.photoURL ||
+                    documento.data().foto ||
+                    "",
+
+                atualizadoEm:
+                    firebase.firestore
+                        .FieldValue
+                        .serverTimestamp()
+
+            }, {
+                merge: true
+            });
+
+        }
+
+
+    } catch (erro) {
+
+        console.error(
+            "Erro ao criar perfil:",
+            erro
+        );
+
+    }
+
+}
+
+
+
+/* ========================================
+   LOGIN
+======================================== */
+
+async function fazerLogin(
+    email,
+    senha
+) {
+
+    try {
+
+        await auth.signInWithEmailAndPassword(
+            email,
+            senha
+        );
+
+
+        mostrarMensagemTemporaria(
+            "Login realizado com sucesso."
+        );
+
+
+    } catch (erro) {
+
+        console.error(
+            erro
+        );
+
+
+        mostrarMensagemTemporaria(
+            traduzirErroFirebase(
+                erro
+            )
+        );
+
+    }
+
+}
+
+
+
+/* ========================================
+   CADASTRO
+======================================== */
+
+async function criarConta(
+    nome,
+    email,
+    senha
+) {
+
+    try {
+
+        const resultado =
+            await auth
+                .createUserWithEmailAndPassword(
+                    email,
+                    senha
+                );
+
+
+        const usuario =
+            resultado.user;
+
+
+        if (usuario) {
+
+            await usuario
+                .updateProfile({
+
+                    displayName:
+                        nome
+
+                });
+
+
+            await criarOuAtualizarUsuario(
+                usuario
+            );
+
+        }
+
+
+        mostrarMensagemTemporaria(
+            "Conta criada com sucesso."
+        );
+
+
+    } catch (erro) {
+
+        console.error(
+            erro
+        );
+
+
+        mostrarMensagemTemporaria(
+            traduzirErroFirebase(
+                erro
+            )
+        );
+
+    }
+
+}
+
+
+
+/* ========================================
+   LOGOUT
+======================================== */
+
+async function fazerLogout() {
+
+    try {
+
+        await auth.signOut();
+
+
+        usuarioAtual =
+            null;
+
+
+        cursos =
+            [];
+
+
+        aulas =
+            [];
+
+
+        progresso =
+            {};
+
+
+        cursoAtual =
+            null;
+
+
+        mostrarLogin();
+
+
+    } catch (erro) {
+
+        console.error(
+            "Erro ao sair:",
+            erro
+        );
+
+    }
+
+}
+
+
+
+/* ========================================
+   RECUPERAR SENHA
+======================================== */
+
+async function recuperarSenha(
+    email
+) {
+
+    if (!email) {
+
+        mostrarMensagemTemporaria(
+            "Digite seu e-mail."
+        );
+
+        return;
+
+    }
+
+
+    try {
+
+        await auth
+            .sendPasswordResetEmail(
+                email
+            );
+
+
+        mostrarMensagemTemporaria(
+            "E-mail de recuperação enviado."
+        );
+
+
+    } catch (erro) {
+
+        console.error(
+            erro
+        );
+
+
+        mostrarMensagemTemporaria(
+            traduzirErroFirebase(
+                erro
+            )
+        );
+
+    }
+
+}
+
+
+
+/* ========================================
+   TRADUZIR ERROS
+======================================== */
+
+function traduzirErroFirebase(
+    erro
+) {
+
+    const codigo =
+        erro?.code ||
+        "";
+
+
+    const mensagens = {
+
+        "auth/invalid-email":
+            "O e-mail informado é inválido.",
+
+        "auth/user-disabled":
+            "Esta conta foi desativada.",
+
+        "auth/user-not-found":
+            "Usuário não encontrado.",
+
+        "auth/wrong-password":
+            "Senha incorreta.",
+
+        "auth/invalid-credential":
+            "E-mail ou senha incorretos.",
+
+        "auth/email-already-in-use":
+            "Este e-mail já está cadastrado.",
+
+        "auth/weak-password":
+            "A senha precisa ter pelo menos 6 caracteres.",
+
+        "auth/network-request-failed":
+            "Erro de conexão. Verifique sua internet.",
+
+        "auth/too-many-requests":
+            "Muitas tentativas. Aguarde alguns minutos."
+
+    };
+
+
+    return (
+        mensagens[codigo] ||
+        "Não foi possível realizar a operação."
+    );
+
+}
+
+
+
+/* ========================================
+   CONTROLE DA APLICAÇÃO
+======================================== */
+
+function mostrarAplicacao() {
+
+    const login =
+        document.getElementById(
+            "telaLogin"
+        );
+
+
+    const aplicativo =
+        document.getElementById(
+            "aplicativo"
+        );
+
+
+    if (login) {
+
+        login.style.display =
+            "none";
+
+    }
+
+
+    if (aplicativo) {
+
+        aplicativo.style.display =
+            "";
+
+    }
+
+}
+
+
+
+function mostrarLogin() {
+
+    const login =
+        document.getElementById(
+            "telaLogin"
+        );
+
+
+    const aplicativo =
+        document.getElementById(
+            "aplicativo"
+        );
+
+
+    if (login) {
+
+        login.style.display =
+            "";
+
+    }
+
+
+    if (aplicativo) {
+
+        aplicativo.style.display =
+            "none";
+
+    }
+
+}
+
+</script>
 
 <!-- =====================================
      JAVASCRIPT
