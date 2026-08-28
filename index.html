@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Estuda+</title>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+
+<body>
+
+
+<div id="telaLogin">
+
+    <div class="login-card">
+
+        <h1>
+            ESTUDA+
+        </h1>
+
+
+        <p>
+            Plataforma de estudos
+        </p>
+
+
+        <form id="formLogin">
+
+
+            <input
+            id="email"
+            type="email"
+            placeholder="E-mail"
+            required>
+
+
+            <input
+            id="senha"
+            type="password"
+            placeholder="Senha"
+            required>
+
+
+            <button
+            type="submit">
+                Entrar
+            </button>
+
+
+        </form>
+
+
+        <button
+        id="btnCadastro"
+        class="btn-link">
+
+            Criar conta
+
+        </button>
+
+
+        <div id="mensagem"></div>
+
+
+    </div>
+
+
+</div>
+
+
+
+<div id="app" style="display:none;">
+
+
+<header>
+
+
+<h1>
+ESTUDA+
+</h1>
+
+
+<nav>
+
+
+<button onclick="abrirCursos()">
+📚 Cursos
+</button>
+
+
+<button onclick="abrirCertificados()">
+🎓 Certificados
+</button>
+
+
+<button onclick="sair()">
+🚪 Sair
+</button>
+
+
+</nav>
+
+
+</header>
+
+
+
+
+<main>
+
+
+
+<section id="areaCursos">
+
+
+<h2>
+Meus cursos
+</h2>
+
+
+<div id="listaCursos">
+
+</div>
+
+
+</section>
+
+
+
+
+<section
+id="areaAulas"
+style="display:none;">
+
+
+<h2 id="tituloCurso">
+
+</h2>
+
+
+<div id="listaAulas">
+
+</div>
+
+
+</section>
+
+
+
+
+<section
+id="areaCertificados"
+style="display:none;">
+
+
+<h2>
+Meus certificados
+</h2>
+
+
+<div id="listaCertificados">
+
+</div>
+
+
+</section>
+
+
+
+</main>
+
+
+</div>
+
+
+
+<script type="module" src="firebase.js"></script>
+
+<script type="module" src="login.js"></script>
+
+<script type="module" src="cursos.js"></script>
+
+<script type="module" src="aulas.js"></script>
+
+<script type="module" src="progresso.js"></script>
+
+<script type="module" src="certificados.js"></script>
+
+
+
+</body>
+
+</html>
